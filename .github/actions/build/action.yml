@@ -6,6 +6,10 @@ inputs:
     description: 'Java version to use'
     required: false
     default: '21'
+  gradle-version:
+    description: 'Gradle version (used if no wrapper present)'
+    required: false
+    default: '8.5'
   gradle-args:
     description: 'Additional Gradle arguments'
     required: false
@@ -19,15 +23,15 @@ runs:
       with:
         java-version: ${{ inputs.java-version }}
         distribution: 'temurin'
-        cache: 'gradle'
 
-    - name: Grant execute permission for gradlew
-      shell: bash
-      run: chmod +x ./gradlew
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: ${{ inputs.gradle-version }}
 
     - name: Build with Gradle
       shell: bash
       run: |
         echo "Building project with Gradle"
-        ./gradlew build ${{ inputs.gradle-args }}
-        echo "Build completed"
+        gradle build ${{ inputs.gradle-args }}
+        echo "✅ Build completed"
