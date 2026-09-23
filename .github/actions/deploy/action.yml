@@ -1,0 +1,38 @@
+name: 'Deploy - EKS Deployment'
+description: 'Deploys application to Amazon EKS'
+
+inputs:
+  aws-region:
+    description: 'AWS region'
+    required: true
+  cluster-name:
+    description: 'EKS cluster name'
+    required: true
+  namespace:
+    description: 'Kubernetes namespace'
+    required: false
+    default: 'default'
+  manifest-path:
+    description: 'Path to Kubernetes manifests'
+    required: false
+    default: 'k8s/'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ inputs.aws-region }}
+
+    - name: Update kubeconfig
+      shell: bash
+      run: |
+        aws eks update-kubeconfig --name ${{ inputs.cluster-name }} --region ${{ inputs.aws-region }}
+
+    - name: Deploy to EKS
+      shell: bash
+      run: |
+        echo "Deploying to cluster: ${{ inputs.cluster-name }}"
+        kubectl apply -f ${{ inputs.manifest-path }} -n ${{ inputs.namespace }}
+        echo "✅ Deployment completed"

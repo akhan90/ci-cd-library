@@ -1,0 +1,22 @@
+name: 'Init - YAML Validation'
+description: 'Validates YAML files in the repository'
+
+inputs:
+  yaml-paths:
+    description: 'Paths to validate (space-separated)'
+    required: false
+    default: '.'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install yamllint
+      shell: bash
+      run: pip install yamllint
+
+    - name: Validate YAML files
+      shell: bash
+      run: |
+        echo "Validating YAML files in: ${{ inputs.yaml-paths }}"
+        yamllint -d "{extends: relaxed, rules: {line-length: {max: 200}}}" ${{ inputs.yaml-paths }}
+        echo "YAML validation passed"
