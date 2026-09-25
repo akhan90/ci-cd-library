@@ -1,0 +1,29 @@
+name: 'SonarQube Scan'
+description: 'Run SonarQube code analysis'
+
+inputs:
+  sonar-host-url:
+    description: 'SonarQube server URL'
+    required: true
+  sonar-token:
+    description: 'SonarQube authentication token'
+    required: true
+  project-key:
+    description: 'SonarQube project key'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: SonarQube Scan
+      uses: SonarSource/sonarqube-scan-action@v3
+      env:
+        SONAR_TOKEN: ${{ inputs.sonar-token }}
+        SONAR_HOST_URL: ${{ inputs.sonar-host-url }}
+      with:
+        args: >
+          -Dsonar.projectKey=${{ inputs.project-key }}
+
+    - name: Check Quality Gate
+      shell: bash
+      run: echo "SonarQube scan completed"

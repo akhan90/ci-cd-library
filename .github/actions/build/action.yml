@@ -34,4 +34,4 @@ runs:
       run: |
         echo "Building project with Gradle"
         gradle build ${{ inputs.gradle-args }}
-        echo "✅ Build completed"
+        echo "Build completed"

@@ -35,4 +35,4 @@ runs:
       run: |
         echo "Deploying to cluster: ${{ inputs.cluster-name }}"
         kubectl apply -f ${{ inputs.manifest-path }} -n ${{ inputs.namespace }}
-        echo "✅ Deployment completed"
+        echo "Deployment completed"

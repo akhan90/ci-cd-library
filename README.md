@@ -8,7 +8,9 @@ Reusable GitHub Actions for CI/CD pipelines.
 |--------|-------------|
 | `init` | YAML validation using yamllint |
 | `build` | Gradle compile |
+| `scan/sonar` | SonarQube code analysis |
 | `image` | Docker image build with Gradle Jib |
+| `scan/image` | Container image vulnerability scan (Trivy) |
 | `deploy` | Deploy to Amazon EKS |
 
 ## Usage
@@ -26,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: akhan90/ci-cd-library/.github/actions/init@main
+      - uses: HMRC/ci-cd-library/.github/actions/init@main
         with:
           yaml-paths: './k8s'
 
@@ -36,7 +38,7 @@ jobs:
     needs: init
     steps:
       - uses: actions/checkout@v4
-      - uses: akhan90/ci-cd-library/.github/actions/build@main
+      - uses: HMRC/ci-cd-library/.github/actions/build@main
         with:
           java-version: '21'
 
@@ -47,7 +49,7 @@ jobs:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
     steps:
       - uses: actions/checkout@v4
-      - uses: akhan90/ci-cd-library/.github/actions/image@main
+      - uses: HMRC/ci-cd-library/.github/actions/image@main
         with:
           image-registry: 'your-registry.ecr.aws'
           image-name: 'my-service'
@@ -60,7 +62,7 @@ jobs:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
     steps:
       - uses: actions/checkout@v4
-      - uses: akhan90/ci-cd-library/.github/actions/deploy@main
+      - uses: HMRC/ci-cd-library/.github/actions/deploy@main
         with:
           aws-region: 'eu-west-2'
           cluster-name: 'my-cluster'
@@ -87,6 +89,21 @@ jobs:
 | `image-registry` | Yes | - | Container registry URL |
 | `image-name` | Yes | - | Image name |
 | `image-tag` | No | `latest` | Image tag |
+| `push` | No | `true` | Push to registry (false = build only) |
+
+### scan/sonar
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `sonar-host-url` | Yes | - | SonarQube server URL |
+| `sonar-token` | Yes | - | SonarQube auth token |
+| `project-key` | Yes | - | SonarQube project key |
+
+### scan/image
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `image-ref` | Yes | - | Image to scan (registry/image:tag) |
+| `severity` | No | `CRITICAL,HIGH` | Severity levels to check |
+| `exit-code` | No | `1` | Exit code on vulnerabilities (0=warn, 1=fail) |
 
 ### Deploy
 | Input | Required | Default | Description |

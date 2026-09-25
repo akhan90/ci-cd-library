@@ -1,5 +1,5 @@
 name: 'Image - Build with Jib'
-description: 'Builds and pushes Docker image using Gradle Jib'
+description: 'Builds Docker image using Gradle Jib (with optional push)'
 
 inputs:
   java-version:
@@ -16,6 +16,10 @@ inputs:
     description: 'Image tag'
     required: false
     default: 'latest'
+  push:
+    description: 'Push image to registry (false = build only)'
+    required: false
+    default: 'true'
 
 runs:
   using: 'composite'
@@ -31,10 +35,20 @@ runs:
       shell: bash
       run: chmod +x ./gradlew
 
-    - name: Build and push image with Jib
+    - name: Build and push image
+      if: inputs.push == 'true'
       shell: bash
       run: |
-        echo "Building image: ${{ inputs.image-registry }}/${{ inputs.image-name }}:${{ inputs.image-tag }}"
+        echo "Building and pushing: ${{ inputs.image-registry }}/${{ inputs.image-name }}:${{ inputs.image-tag }}"
         ./gradlew jib \
           -Djib.to.image=${{ inputs.image-registry }}/${{ inputs.image-name }}:${{ inputs.image-tag }}
-        echo "✅ Image pushed successfully"
+        echo "Image pushed"
+
+    - name: Build image (no push)
+      if: inputs.push == 'false'
+      shell: bash
+      run: |
+        echo "Building (no push): ${{ inputs.image-registry }}/${{ inputs.image-name }}:${{ inputs.image-tag }}"
+        ./gradlew jibDockerBuild \
+          -Djib.to.image=${{ inputs.image-registry }}/${{ inputs.image-name }}:${{ inputs.image-tag }}
+        echo "Image built locally"
