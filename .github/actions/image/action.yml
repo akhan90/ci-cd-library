@@ -6,6 +6,10 @@ inputs:
     description: 'Java version to use'
     required: false
     default: '21'
+  gradle-version:
+    description: 'Gradle version'
+    required: false
+    default: '8.5'
   image-registry:
     description: 'Container registry URL'
     required: true
@@ -29,26 +33,26 @@ runs:
       with:
         java-version: ${{ inputs.java-version }}
         distribution: 'temurin'
-        cache: 'gradle'
 
-    - name: Grant execute permission for gradlew
-      shell: bash
-      run: chmod +x ./gradlew
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: ${{ inputs.gradle-version }}
 
     - name: Build and push image
       if: inputs.push == 'true'
       shell: bash
       run: |
         echo "Building and pushing: ${{ inputs.image-registry }}/${{ inputs.image-name }}:${{ inputs.image-tag }}"
-        ./gradlew jib \
+        gradle jib \
           -Djib.to.image=${{ inputs.image-registry }}/${{ inputs.image-name }}:${{ inputs.image-tag }}
-        echo "Image pushed"
+        echo "✅ Image pushed"
 
     - name: Build image (no push)
       if: inputs.push == 'false'
       shell: bash
       run: |
         echo "Building (no push): ${{ inputs.image-registry }}/${{ inputs.image-name }}:${{ inputs.image-tag }}"
-        ./gradlew jibDockerBuild \
+        gradle jibDockerBuild \
           -Djib.to.image=${{ inputs.image-registry }}/${{ inputs.image-name }}:${{ inputs.image-tag }}
-        echo "Image built locally"
+        echo "✅ Image built locally"
