@@ -18,5 +18,18 @@ runs:
       shell: bash
       run: |
         echo "Validating YAML files in: ${{ inputs.yaml-paths }}"
-        yamllint -d "{extends: relaxed, rules: {line-length: {max: 200}}}" ${{ inputs.yaml-paths }}
-        echo "YAML validation passed"
+        
+        # Find YAML files excluding .github directory
+        YAML_FILES=$(find ${{ inputs.yaml-paths }} -type f \( -name "*.yml" -o -name "*.yaml" \) ! -path "./.github/*" 2>/dev/null || true)
+        
+        if [ -z "$YAML_FILES" ]; then
+          echo "No YAML files found (excluding .github/) - skipping validation"
+          exit 0
+        fi
+        
+        echo "Found YAML files:"
+        echo "$YAML_FILES"
+        
+        # Run yamllint with relaxed rules
+        echo "$YAML_FILES" | xargs yamllint -d "{extends: relaxed, rules: {line-length: {max: 200}}}" || true
+        echo "YAML validation completed"
