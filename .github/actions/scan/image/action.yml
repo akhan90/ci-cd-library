@@ -9,22 +9,38 @@ inputs:
     description: 'Severity levels to check (CRITICAL,HIGH,MEDIUM,LOW)'
     required: false
     default: 'CRITICAL,HIGH'
-  exit-code:
-    description: 'Exit code when vulnerabilities found (0 = warn, 1 = fail)'
+  skip-failure:
+    description: 'Pass even if vulnerabilities found (true = warn only)'
     required: false
-    default: '1'
+    default: 'false'
 
 runs:
   using: 'composite'
   steps:
-    - name: Run Trivy vulnerability scanner
+    - name: 'Scan: Run Trivy vulnerability scanner'
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: ${{ inputs.image-ref }}
         format: 'table'
-        exit-code: ${{ inputs.exit-code }}
+        exit-code: ${{ inputs.skip-failure == 'true' && '0' || '1' }}
         severity: ${{ inputs.severity }}
+        output: 'trivy-report.txt'
 
-    - name: Scan complete
+    - name: 'Scan: Generate summary report'
       shell: bash
-      run: echo "Image scan completed"
+      run: |
+        echo "## 🔍 Image Scan Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Image:** \`${{ inputs.image-ref }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "**Severity:** ${{ inputs.severity }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if [ -f trivy-report.txt ]; then
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat trivy-report.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+        fi
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ inputs.skip-failure }}" == "true" ]; then
+          echo "⚠️ **Mode:** Warning only (skip-failure=true)" >> $GITHUB_STEP_SUMMARY
+        fi
+        echo "✅ Scan completed" >> $GITHUB_STEP_SUMMARY
